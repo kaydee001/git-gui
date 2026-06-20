@@ -1,18 +1,19 @@
 import sys
 import os
 import subprocess
-from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QMessageBox, QTextEdit, QLineEdit
+from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("test")
-        self.resize(500, 500)
+        self.resize(800, 600)
 
         self.button = QPushButton("select folder")
-        self.label = QLabel("no folder selected")
+        self.folder_label = QLabel("no folder selected")
         self.stage_button = QPushButton("stage all")
+        self.commit_msg_label = QLabel("commit msg")
         self.commit_input = QLineEdit()
         self.commit_button = QPushButton("commit")
         self.push_button = QPushButton("push")
@@ -26,16 +27,32 @@ class MainWindow(QWidget):
         self.commit_button.clicked.connect(self.run_git_commit)
         self.push_button.clicked.connect(self.run_git_push)
 
-        layout = QHBoxLayout()
-        layout.addWidget(self.button)
-        layout.addWidget(self.label)
-        layout.addWidget(self.status_box)
-        layout.addWidget(self.stage_button)
-        layout.addWidget(self.commit_input)
-        layout.addWidget(self.commit_button)
-        layout.addWidget(self.push_button)
+        row1 = QHBoxLayout()
+        row1.addWidget(self.button)
+        row1.addWidget(self.folder_label)
 
-        self.setLayout(layout)
+        row2 = QVBoxLayout()
+        row2.addWidget(self.stage_button)
+
+        row3 = QVBoxLayout()
+        row3.addWidget(self.commit_msg_label)
+
+        row4 = QVBoxLayout()
+        row4.addWidget(self.commit_input)
+
+        row5 = QHBoxLayout()
+        row5.addWidget(self.commit_button)
+        row5.addWidget(self.push_button)
+
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(row1)
+        main_layout.addWidget(self.status_box)
+        main_layout.addLayout(row2)
+        main_layout.addLayout(row3)
+        main_layout.addLayout(row4)
+        main_layout.addLayout(row5)
+
+        self.setLayout(main_layout)
 
     def is_git_repo(self):
         selected_path = os.path.join(self.selected_path, ".git")
@@ -73,7 +90,7 @@ class MainWindow(QWidget):
     def open_folder_dialog(self):
         path = QFileDialog.getExistingDirectory(self, "select folder")
         self.selected_path = path
-        self.label.setText(path)
+        self.folder_label.setText(path)
 
         is_repo = self.is_git_repo()
         if not is_repo:
