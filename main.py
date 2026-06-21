@@ -1,7 +1,7 @@
 import sys
 import os
 import subprocess
-from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit
+from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit, QListWidget
 
 
 class MainWindow(QWidget):
@@ -12,13 +12,14 @@ class MainWindow(QWidget):
 
         self.button = QPushButton("select folder")
         self.folder_label = QLabel("no folder selected")
+        self.status_box = QTextEdit()
         self.stage_button = QPushButton("stage all")
         self.commit_msg_label = QLabel("commit msg")
         self.commit_input = QLineEdit()
         self.commit_button = QPushButton("commit")
         self.push_button = QPushButton("push")
-
-        self.status_box = QTextEdit()
+        self.log_button = QPushButton("log")
+        self.commit_log = QListWidget()
 
         self.button.clicked.connect(self.open_folder_dialog)
         self.status_box.setReadOnly(True)
@@ -26,6 +27,7 @@ class MainWindow(QWidget):
         self.stage_button.clicked.connect(self.run_git_add)
         self.commit_button.clicked.connect(self.run_git_commit)
         self.push_button.clicked.connect(self.run_git_push)
+        self.log_button.clicked.connect(self.run_git_log)
 
         row1 = QHBoxLayout()
         row1.addWidget(self.button)
@@ -44,6 +46,10 @@ class MainWindow(QWidget):
         row5.addWidget(self.commit_button)
         row5.addWidget(self.push_button)
 
+        row6 = QHBoxLayout()
+        row6.addWidget(self.log_button)
+        row6.addWidget(self.commit_log)
+
         main_layout = QVBoxLayout()
         main_layout.addLayout(row1)
         main_layout.addWidget(self.status_box)
@@ -51,6 +57,7 @@ class MainWindow(QWidget):
         main_layout.addLayout(row3)
         main_layout.addLayout(row4)
         main_layout.addLayout(row5)
+        main_layout.addLayout(row6)
 
         self.setLayout(main_layout)
 
@@ -86,6 +93,14 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "push failed", result.stderr)
         else:
             self.run_git_status()
+
+    def run_git_log(self):
+        result = subprocess.run(
+            ["git", "log", "--oneline", "-5"], cwd=self.selected_path, capture_output=True, text=True)
+        self.commit_log.clear()
+        lines = result.stdout.splitlines()
+        for line in lines:
+            self.commit_log.addItem(line)
 
     def open_folder_dialog(self):
         path = QFileDialog.getExistingDirectory(self, "select folder")
