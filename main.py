@@ -2,30 +2,43 @@ import sys
 import os
 import subprocess
 from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit, QListWidget, QComboBox
+from PySide6.QtCore import Qt
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("test")
+        self.setWindowTitle("Git GUI")
         self.resize(800, 600)
 
-        self.button = QPushButton("select folder")
+        self.folder_button = QPushButton("select folder")
         self.folder_label = QLabel("no folder selected")
         self.status_box = QTextEdit()
         self.stage_button = QPushButton("stage all")
-        self.commit_msg_label = QLabel("commit msg")
         self.commit_input = QLineEdit()
         self.commit_button = QPushButton("commit")
         self.push_button = QPushButton("push")
-        self.log_button = QPushButton("log")
+        self.log_button = QPushButton("view commit log")
         self.commit_log = QListWidget()
         self.unstage_button = QPushButton("unstage")
         self.status_label = QLabel("-")
         self.branch_dropdown = QComboBox()
 
-        self.button.clicked.connect(self.open_folder_dialog)
+        self.folder_button.clicked.connect(self.open_folder_dialog)
         self.status_box.setReadOnly(True)
+
+        self.status_label.setObjectName("statusLabel")
+
+        self.folder_button.setFixedWidth(180)
+        self.stage_button.setFixedWidth(180)
+        self.unstage_button.setFixedWidth(180)
+
+        self.commit_button.setFixedWidth(180)
+        self.push_button.setFixedWidth(180)
+
+        self.log_button.setFixedWidth(180)
+
+        self.commit_input.setPlaceholderText("enter commit msg")
 
         self.stage_button.clicked.connect(self.run_git_add)
         self.commit_button.clicked.connect(self.run_git_commit)
@@ -35,42 +48,74 @@ class MainWindow(QWidget):
         self.branch_dropdown.currentTextChanged.connect(self.switch_branch)
 
         row1 = QHBoxLayout()
-        row1.addWidget(self.button)
+        row1.addWidget(self.folder_button)
+        row1.addSpacing(15)
         row1.addWidget(self.folder_label)
+        row1.addStretch()
         row1.addWidget(self.status_label)
+        row1.addSpacing(15)
         row1.addWidget(self.branch_dropdown)
 
-        row2 = QVBoxLayout()
+        row2 = QHBoxLayout()
+        row2.addStretch()
         row2.addWidget(self.stage_button)
+        row2.addStretch()
+        row2.addWidget(self.unstage_button)
+        row2.addStretch()
 
         row3 = QVBoxLayout()
-        row3.addWidget(self.commit_msg_label)
+        row3.addWidget(self.commit_input)
 
-        row4 = QVBoxLayout()
-        row4.addWidget(self.commit_input)
+        row4 = QHBoxLayout()
+        row4.addStretch()
+        row4.addWidget(self.commit_button)
+        row4.addStretch()
+        row4.addWidget(self.push_button)
+        row4.addStretch()
+        row4.addWidget(self.log_button)
+        row4.addStretch()
 
         row5 = QHBoxLayout()
-        row5.addWidget(self.commit_button)
-        row5.addWidget(self.push_button)
-
-        row6 = QHBoxLayout()
-        row6.addWidget(self.log_button)
-        row6.addWidget(self.commit_log)
-
-        row7 = QHBoxLayout()
-        row7.addWidget(self.unstage_button)
+        row5.addWidget(self.commit_log)
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(row1)
+        row1.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.status_box)
         main_layout.addLayout(row2)
+        row2.setAlignment(self.stage_button, Qt.AlignCenter)
         main_layout.addLayout(row3)
         main_layout.addLayout(row4)
         main_layout.addLayout(row5)
-        main_layout.addLayout(row6)
-        main_layout.addLayout(row7)
 
         self.setLayout(main_layout)
+
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1e1e1e;
+                color: #ffffff;
+                font-family: Segoe UI;
+                font-size: 10pt;
+            }
+            QPushButton {
+                background-color: #2d2d2d;
+                border: 1px solid #3c3c3c;
+                padding: 6px;
+                border-radius: 4px;
+            }
+            QPushButton:hover {
+                background-color: #3c3c3c;
+            }
+            QLineEdit, QTextEdit, QListWidget, QComboBox {
+                background-color: #252526;
+                border: 1px solid #3c3c3c;
+                border-radius: 4px;
+                padding: 4px;
+            }
+            QLabel#statusLabel {
+                font-weight: bold;
+            }
+        """)
 
     def is_git_repo(self):
         selected_path = os.path.join(self.selected_path, ".git")
@@ -87,10 +132,13 @@ class MainWindow(QWidget):
 
         if "nothing to commit, working tree clean" in result.stdout:
             self.status_label.setText("clean")
+            self.status_label.setStyleSheet("color: #11b918;")
         elif "Changes to be committed" in result.stdout:
             self.status_label.setText("staged")
+            self.status_label.setStyleSheet("color: #efef3c;")
         elif "Changes not staged" in result.stdout:
             self.status_label.setText("unstaged")
+            self.status_label.setStyleSheet("color: #ef4624;")
 
         self.branch_dropdown.currentTextChanged.disconnect(self.switch_branch)
         self.branch_dropdown.clear()
