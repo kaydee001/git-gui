@@ -63,30 +63,26 @@ class MainWindow(QWidget):
         row2.addWidget(self.unstage_button)
         row2.addStretch()
 
-        row3 = QVBoxLayout()
-        row3.addWidget(self.commit_input)
+        row3 = QHBoxLayout()
+        row3.addStretch()
+        row3.addWidget(self.commit_button)
+        row3.addStretch()
+        row3.addWidget(self.push_button)
+        row3.addStretch()
+        row3.addWidget(self.log_button)
+        row3.addStretch()
 
         row4 = QHBoxLayout()
-        row4.addStretch()
-        row4.addWidget(self.commit_button)
-        row4.addStretch()
-        row4.addWidget(self.push_button)
-        row4.addStretch()
-        row4.addWidget(self.log_button)
-        row4.addStretch()
-
-        row5 = QHBoxLayout()
-        row5.addWidget(self.commit_log)
+        row4.addWidget(self.commit_log)
 
         main_layout = QVBoxLayout()
-        main_layout.addLayout(row1)
         row1.setAlignment(Qt.AlignCenter)
+        main_layout.addLayout(row1)
         main_layout.addWidget(self.status_box)
         main_layout.addLayout(row2)
-        row2.setAlignment(self.stage_button, Qt.AlignCenter)
+        main_layout.addWidget(self.commit_input)
         main_layout.addLayout(row3)
         main_layout.addLayout(row4)
-        main_layout.addLayout(row5)
 
         self.setLayout(main_layout)
 
@@ -149,7 +145,8 @@ class MainWindow(QWidget):
         self.status_box.setText(result.stdout)
 
     def run_git_add(self):
-        result = subprocess.run(["git", "add", "."], cwd=self.selected_path)
+        result = subprocess.run(
+            ["git", "add", "."], cwd=self.selected_path, capture_output=True, text=True)
         self.run_git_status()
 
     def run_git_commit(self):
@@ -158,7 +155,7 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "error", "no commit msg found")
         else:
             result = subprocess.run(
-                ["git", "commit", "-m", f"{msg}"], cwd=self.selected_path)
+                ["git", "commit", "-m", f"{msg}"], cwd=self.selected_path, capture_output=True, text=True)
             self.commit_input.clear()
             self.run_git_status()
 
@@ -179,7 +176,8 @@ class MainWindow(QWidget):
             self.commit_log.addItem(line)
 
     def run_git_unstage(self):
-        result = subprocess.run(["git", "reset"], cwd=self.selected_path)
+        result = subprocess.run(
+            ["git", "reset"], cwd=self.selected_path, capture_output=True, text=True)
         self.run_git_status()
 
     def switch_branch(self, branch_name):
@@ -207,6 +205,8 @@ class MainWindow(QWidget):
 
     def open_folder_dialog(self):
         path = QFileDialog.getExistingDirectory(self, "select folder")
+        if not path:
+            return
         self.selected_path = path
         self.folder_label.setText(path)
 
