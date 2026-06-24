@@ -4,6 +4,8 @@ import subprocess
 from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit, QListWidget, QComboBox
 from PySide6.QtCore import Qt
 
+NO_WINDOW = subprocess.CREATE_NO_WINDOW
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -123,7 +125,7 @@ class MainWindow(QWidget):
         self.run_git_branch()
 
         result = subprocess.run(
-            ["git", "status"], cwd=self.selected_path, capture_output=True, text=True)
+            ["git", "status"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         self.status_label.setText(result.stdout)
 
         if "nothing to commit, working tree clean" in result.stdout:
@@ -146,7 +148,7 @@ class MainWindow(QWidget):
 
     def run_git_add(self):
         result = subprocess.run(
-            ["git", "add", "."], cwd=self.selected_path, capture_output=True, text=True)
+            ["git", "add", "."], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         self.run_git_status()
 
     def run_git_commit(self):
@@ -155,13 +157,13 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "error", "no commit msg found")
         else:
             result = subprocess.run(
-                ["git", "commit", "-m", f"{msg}"], cwd=self.selected_path, capture_output=True, text=True)
+                ["git", "commit", "-m", f"{msg}"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
             self.commit_input.clear()
             self.run_git_status()
 
     def run_git_push(self):
         result = subprocess.run(
-            ["git", "push"], cwd=self.selected_path, capture_output=True, text=True)
+            ["git", "push"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         if result.returncode:
             QMessageBox.warning(self, "push failed", result.stderr)
         else:
@@ -169,7 +171,7 @@ class MainWindow(QWidget):
 
     def run_git_log(self):
         result = subprocess.run(
-            ["git", "log", "--oneline", "-5"], cwd=self.selected_path, capture_output=True, text=True)
+            ["git", "log", "--oneline", "-5"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         self.commit_log.clear()
         lines = result.stdout.splitlines()
         for line in lines:
@@ -177,12 +179,12 @@ class MainWindow(QWidget):
 
     def run_git_unstage(self):
         result = subprocess.run(
-            ["git", "reset"], cwd=self.selected_path, capture_output=True, text=True)
+            ["git", "reset"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         self.run_git_status()
 
     def switch_branch(self, branch_name):
         result = subprocess.run(
-            ["git", "checkout", f"{branch_name}"], cwd=self.selected_path, capture_output=True, text=True)
+            ["git", "checkout", f"{branch_name}"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         if result.returncode:
             QMessageBox.warning(self, "branching failed", result.stderr)
         else:
@@ -190,7 +192,7 @@ class MainWindow(QWidget):
 
     def run_git_branch(self):
         result = subprocess.run(
-            ["git", "branch"], cwd=self.selected_path, capture_output=True, text=True)
+            ["git", "branch"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         self.branch_names = []
         lines = result.stdout.splitlines()
         self.current_branch = ""
