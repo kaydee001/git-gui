@@ -25,6 +25,8 @@ class MainWindow(QWidget):
         self.unstage_button = QPushButton("unstage")
         self.status_label = QLabel("-")
         self.branch_dropdown = QComboBox()
+        self.pull_button = QPushButton("pull")
+        self.fetch_all_button = QPushButton("fetch all")
 
         self.folder_button.clicked.connect(self.open_folder_dialog)
         self.status_box.setReadOnly(True)
@@ -42,12 +44,17 @@ class MainWindow(QWidget):
 
         self.commit_input.setPlaceholderText("enter commit msg")
 
+        self.pull_button.setFixedWidth(180)
+        self.fetch_all_button.setFixedWidth(180)
+
         self.stage_button.clicked.connect(self.run_git_add)
         self.commit_button.clicked.connect(self.run_git_commit)
         self.push_button.clicked.connect(self.run_git_push)
         self.log_button.clicked.connect(self.run_git_log)
         self.unstage_button.clicked.connect(self.run_git_unstage)
         self.branch_dropdown.currentTextChanged.connect(self.switch_branch)
+        self.pull_button.clicked.connect(self.run_git_pull)
+        self.fetch_all_button.clicked.connect(self.run_git_fetch_all)
 
         row1 = QHBoxLayout()
         row1.addWidget(self.folder_button)
@@ -77,6 +84,10 @@ class MainWindow(QWidget):
         row4 = QHBoxLayout()
         row4.addWidget(self.commit_log)
 
+        row5 = QHBoxLayout()
+        row5.addWidget(self.pull_button)
+        row5.addWidget(self.fetch_all_button)
+
         main_layout = QVBoxLayout()
         row1.setAlignment(Qt.AlignCenter)
         main_layout.addLayout(row1)
@@ -85,6 +96,7 @@ class MainWindow(QWidget):
         main_layout.addWidget(self.commit_input)
         main_layout.addLayout(row3)
         main_layout.addLayout(row4)
+        main_layout.addLayout(row5)
 
         self.setLayout(main_layout)
 
@@ -115,10 +127,19 @@ class MainWindow(QWidget):
             }
         """)
 
+    def show_message(self, title, text, icon=QMessageBox.Icon.Information):
+        msg = QMessageBox(self)
+        msg.setIcon(icon)
+        msg.setWindowTitle(title)
+        msg.setText(text)
+        msg.setFixedWidth(300)
+        msg.exec()
+
     def is_git_repo(self):
         selected_path = os.path.join(self.selected_path, ".git")
         if os.path.exists(selected_path):
             return True
+
         return False
 
     def run_git_status(self):
@@ -154,7 +175,8 @@ class MainWindow(QWidget):
     def run_git_commit(self):
         msg = self.commit_input.text()
         if not msg:
-            QMessageBox.warning(self, "error", "no commit msg found")
+            self.show_message("error", "no commit msg found",
+                              QMessageBox.Icon.Warning)
         else:
             result = subprocess.run(
                 ["git", "commit", "-m", f"{msg}"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
@@ -165,7 +187,7 @@ class MainWindow(QWidget):
         result = subprocess.run(
             ["git", "push"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         if result.returncode:
-            QMessageBox.warning(self, "push failed", result.stderr)
+            self.show_message("error", result.stderr, QMessageBox.Icon.Warning)
         else:
             self.run_git_status()
 
@@ -186,7 +208,8 @@ class MainWindow(QWidget):
         result = subprocess.run(
             ["git", "checkout", f"{branch_name}"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
         if result.returncode:
-            QMessageBox.warning(self, "branching failed", result.stderr)
+            self.show_message("error", result.stderr,
+                              QMessageBox.Icon.Warning)
         else:
             self.run_git_status()
 
@@ -205,6 +228,26 @@ class MainWindow(QWidget):
                 line = line.strip()
                 self.branch_names.append(line)
 
+    def run_git_pull(self):
+        result = subprocess.run(
+            ["git", "pull"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
+        if result.returncode:
+            self.show_message("error", "pull failed",
+                              QMessageBox.Icon.Warning)
+        else:
+            self.show_message("pull", "already upto date")
+            self.run_git_status()
+
+    def run_git_fetch_all(self):
+        result = subprocess.run(
+            ["git", "fetch", "--all"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
+        if result.returncode:
+            self.show_message("error", "fetch failed",
+                              QMessageBox.Icon.Warning)
+        else:
+            self.show_message("fetch", "fetch complete")
+            self.run_git_status()
+
     def open_folder_dialog(self):
         path = QFileDialog.getExistingDirectory(self, "select folder")
         if not path:
@@ -214,7 +257,8 @@ class MainWindow(QWidget):
 
         is_repo = self.is_git_repo()
         if not is_repo:
-            QMessageBox.warning(self, "error", "not a repo")
+            self.show_message("error", "not a repo",
+                              QMessageBox.Icon.Warning)
         else:
             self.run_git_status()
 
