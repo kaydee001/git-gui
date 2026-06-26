@@ -2,9 +2,23 @@ import sys
 import os
 import subprocess
 from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit, QListWidget, QComboBox
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread, Signal
 
 NO_WINDOW = subprocess.CREATE_NO_WINDOW
+
+
+class GitWorker(QThread):
+    finished = Signal(int, str, str)
+
+    def __init__(self, command, cwd):
+        super().__init__()
+        self.command = command
+        self.cwd = cwd
+
+    def run(self):
+        result = subprocess.run(
+            self.command, cwd=self.cwd, capture_output=True, text=True, creationflags=NO_WINDOW)
+        self.finished.emit(result.returncode, result.stdout, result.stderr)
 
 
 class MainWindow(QWidget):
@@ -135,6 +149,12 @@ class MainWindow(QWidget):
         msg.setFixedWidth(300)
         msg.exec()
 
+    def on_git_done(self, returncode, stdout, stderr):
+        if returncode:
+            self.show_message("error", stderr, QMessageBox.Icon.Warning)
+        else:
+            self.run_git_status()
+
     def is_git_repo(self):
         selected_path = os.path.join(self.selected_path, ".git")
         if os.path.exists(selected_path):
@@ -168,9 +188,10 @@ class MainWindow(QWidget):
         self.status_box.setText(result.stdout)
 
     def run_git_add(self):
-        result = subprocess.run(
-            ["git", "add", "."], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
-        self.run_git_status()
+        command = ["git", "add", "."]
+        self.worker = GitWorker(command, self.selected_path)
+        self.worker.finished.connect(self.on_git_done)
+        self.worker.start()
 
     def run_git_commit(self):
         msg = self.commit_input.text()
@@ -184,12 +205,10 @@ class MainWindow(QWidget):
             self.run_git_status()
 
     def run_git_push(self):
-        result = subprocess.run(
-            ["git", "push"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
-        if result.returncode:
-            self.show_message("error", result.stderr, QMessageBox.Icon.Warning)
-        else:
-            self.run_git_status()
+        command = ["git", "push"]
+        self.worker = GitWorker(command, self.selected_path)
+        self.worker.finished.connect(self.on_git_done)
+        self.worker.start()
 
     def run_git_log(self):
         result = subprocess.run(
@@ -229,14 +248,10 @@ class MainWindow(QWidget):
                 self.branch_names.append(line)
 
     def run_git_pull(self):
-        result = subprocess.run(
-            ["git", "pull"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
-        if result.returncode:
-            self.show_message("error", "pull failed",
-                              QMessageBox.Icon.Warning)
-        else:
-            self.show_message("pull", "already upto date")
-            self.run_git_status()
+        command = ["git", "pull"]
+        self.worker = GitWorker(command, self.selected_path)
+        self.worker.finished.connect(self.on_git_done)
+        self.worker.start()
 
     def run_git_fetch_all(self):
         result = subprocess.run(
