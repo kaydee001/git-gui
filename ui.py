@@ -1,8 +1,15 @@
-import subprocess
+import sys
+import os
 from PySide6.QtWidgets import QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit, QListWidget, QComboBox
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QMovie
 from git_ops import GitOpsMixin
+
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return relative_path
 
 
 class MainWindow(QWidget, GitOpsMixin):
@@ -15,7 +22,7 @@ class MainWindow(QWidget, GitOpsMixin):
         self._init_connections()
         self._init_layout()
 
-        with open("style.qss", "r") as f:
+        with open(resource_path("style.qss"), "r") as f:
             self.setStyleSheet(f.read())
 
     def _init_widgets(self):
@@ -34,7 +41,7 @@ class MainWindow(QWidget, GitOpsMixin):
         self.pull_button = QPushButton("pull")
         self.fetch_all_button = QPushButton("fetch all")
         self.spinner = QLabel()
-        self.spinner_movie = QMovie("loading_ring.gif")
+        self.spinner_movie = QMovie(resource_path("loading_ring.gif"))
 
         self.status_label.setObjectName("statusLabel")
 
