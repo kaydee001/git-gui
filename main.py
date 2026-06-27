@@ -3,6 +3,7 @@ import os
 import subprocess
 from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit, QListWidget, QComboBox
 from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QMovie
 
 NO_WINDOW = subprocess.CREATE_NO_WINDOW
 
@@ -41,6 +42,8 @@ class MainWindow(QWidget):
         self.branch_dropdown = QComboBox()
         self.pull_button = QPushButton("pull")
         self.fetch_all_button = QPushButton("fetch all")
+        self.spinner = QLabel()
+        self.spinner_movie = QMovie("loading_ring.gif")
 
         self.folder_button.clicked.connect(self.open_folder_dialog)
         self.status_box.setReadOnly(True)
@@ -57,9 +60,15 @@ class MainWindow(QWidget):
         self.log_button.setFixedWidth(180)
 
         self.commit_input.setPlaceholderText("enter commit msg")
+        self.commit_input.setEnabled(False)
 
         self.pull_button.setFixedWidth(180)
         self.fetch_all_button.setFixedWidth(180)
+
+        self.spinner.setMovie(self.spinner_movie)
+        self.spinner.setFixedSize(24, 24)
+        self.spinner_movie.setScaledSize(self.spinner.size())
+        self.spinner.hide()
 
         self.stage_button.clicked.connect(self.run_git_add)
         self.commit_button.clicked.connect(self.run_git_commit)
@@ -70,10 +79,20 @@ class MainWindow(QWidget):
         self.pull_button.clicked.connect(self.run_git_pull)
         self.fetch_all_button.clicked.connect(self.run_git_fetch_all)
 
+        self.stage_button.setEnabled(False)
+        self.commit_button.setEnabled(False)
+        self.push_button.setEnabled(False)
+        self.log_button.setEnabled(False)
+        self.unstage_button.setEnabled(False)
+        self.pull_button.setEnabled(False)
+        self.fetch_all_button.setEnabled(False)
+
         row1 = QHBoxLayout()
         row1.addWidget(self.folder_button)
         row1.addSpacing(15)
         row1.addWidget(self.folder_label)
+        row1.addStretch()
+        row1.addWidget(self.spinner)
         row1.addStretch()
         row1.addWidget(self.status_label)
         row1.addSpacing(15)
@@ -139,7 +158,41 @@ class MainWindow(QWidget):
             QLabel#statusLabel {
                 font-weight: bold;
             }
+            QPushButton:disabled {
+                background-color: #1a1a1a;
+                color: #555555;
+                border: 1px solid #2a2a2a;
+            }
+            QLineEdit:disabled {
+                background-color: #1a1a1a;
+                color: #555555;
+                border: 1px solid #2a2a2a;
+            }                           
         """)
+
+    def show_spinner(self):
+        self.spinner_movie.start()
+        self.spinner.show()
+        self.stage_button.setEnabled(False)
+        self.commit_button.setEnabled(False)
+        self.push_button.setEnabled(False)
+        self.log_button.setEnabled(False)
+        self.unstage_button.setEnabled(False)
+        self.pull_button.setEnabled(False)
+        self.fetch_all_button.setEnabled(False)
+        self.commit_input.setEnabled(False)
+
+    def hide_spinner(self):
+        self.spinner_movie.stop()
+        self.spinner.hide()
+        self.stage_button.setEnabled(True)
+        self.commit_button.setEnabled(True)
+        self.push_button.setEnabled(True)
+        self.log_button.setEnabled(True)
+        self.unstage_button.setEnabled(True)
+        self.pull_button.setEnabled(True)
+        self.fetch_all_button.setEnabled(True)
+        self.commit_input.setEnabled(True)
 
     def show_message(self, title, text, icon=QMessageBox.Icon.Information):
         msg = QMessageBox(self)
@@ -150,6 +203,7 @@ class MainWindow(QWidget):
         msg.exec()
 
     def on_git_done(self, returncode, stdout, stderr):
+        self.hide_spinner()
         if returncode:
             self.show_message("error", stderr, QMessageBox.Icon.Warning)
         else:
@@ -188,6 +242,7 @@ class MainWindow(QWidget):
         self.status_box.setText(result.stdout)
 
     def run_git_add(self):
+        self.show_spinner()
         command = ["git", "add", "."]
         self.worker = GitWorker(command, self.selected_path)
         self.worker.finished.connect(self.on_git_done)
@@ -205,6 +260,7 @@ class MainWindow(QWidget):
             self.run_git_status()
 
     def run_git_push(self):
+        self.show_spinner()
         command = ["git", "push"]
         self.worker = GitWorker(command, self.selected_path)
         self.worker.finished.connect(self.on_git_done)
@@ -248,20 +304,18 @@ class MainWindow(QWidget):
                 self.branch_names.append(line)
 
     def run_git_pull(self):
+        self.show_spinner()
         command = ["git", "pull"]
         self.worker = GitWorker(command, self.selected_path)
         self.worker.finished.connect(self.on_git_done)
         self.worker.start()
 
     def run_git_fetch_all(self):
-        result = subprocess.run(
-            ["git", "fetch", "--all"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
-        if result.returncode:
-            self.show_message("error", "fetch failed",
-                              QMessageBox.Icon.Warning)
-        else:
-            self.show_message("fetch", "fetch complete")
-            self.run_git_status()
+        self.show_spinner()
+        command = ["git", "fetch", "--all"]
+        self.worker = GitWorker(command, self.selected_path)
+        self.worker.finished.connect(self.on_git_done)
+        self.worker.start()
 
     def open_folder_dialog(self):
         path = QFileDialog.getExistingDirectory(self, "select folder")
@@ -276,6 +330,14 @@ class MainWindow(QWidget):
                               QMessageBox.Icon.Warning)
         else:
             self.run_git_status()
+            self.stage_button.setEnabled(True)
+            self.commit_button.setEnabled(True)
+            self.commit_input.setEnabled(True)
+            self.push_button.setEnabled(True)
+            self.log_button.setEnabled(True)
+            self.unstage_button.setEnabled(True)
+            self.pull_button.setEnabled(True)
+            self.fetch_all_button.setEnabled(True)
 
 
 app = QApplication(sys.argv)
