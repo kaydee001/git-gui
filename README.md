@@ -1,6 +1,10 @@
+here's the updated README:
+
+---
+
 # git-gui
 
-A lightweight desktop Git client built with Python and PySide6. Built to solve a personal pain point — constantly switching to the terminal for routine Git operations while working on pipeline projects.
+A lightweight desktop Git client built with Python and PySide6.
 
 ![screenshot](screenshot.png)
 
@@ -11,12 +15,14 @@ Honestly started as a random idea — wanted to see if I could integrate Git ope
 ## Features
 
 - Folder selection with automatic Git repo detection
-- Live repo status display with staged/unstaged/clean state indicator
+- Live repo status with staged/unstaged/clean indicator
 - Stage all changes or unstage with one click
 - Commit with message validation
-- Push to remote with error handling
-- Branch switching via dropdown with signal loop protection
-- Last 5 commits viewer
+- Push, pull, and fetch all with error handling
+- Branch switching via dropdown
+- Commit log viewer (last 5 commits)
+- Animated spinner during git operations
+- All git operations run on background threads — UI stays responsive
 
 ## Setup
 
@@ -25,6 +31,20 @@ pip install PySide6
 python main.py
 ```
 
+Or download the latest exe from [Releases](https://github.com/kaydee001/git-gui/releases).
+
 ## Stack
 
-Python · PySide6 · subprocess
+Python · PySide6 · subprocess · QThread
+
+## Structure
+
+```
+main.py       # entry point
+ui.py         # MainWindow, layouts, widgets
+git_ops.py    # git operations mixin
+worker.py     # QThread worker for background git commands
+style.qss     # stylesheet
+```
+
+---
