@@ -127,7 +127,9 @@ class GitOpsMixin():
         if not path:
             return
         self.selected_path = path
-        self.folder_label.setText(path)
+        folder_name = os.path.basename(self.selected_path)
+        self.status_section_label.setText(f"repository status : {folder_name}")
+        self.folder_label.setText(None)
 
         is_repo = self.is_git_repo()
         if not is_repo:

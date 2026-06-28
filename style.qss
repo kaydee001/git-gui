@@ -32,3 +32,12 @@ QLineEdit:disabled {
     color: #555555;
     border: 1px solid #2a2a2a;
 }
+QLabel#sectionLabel {
+    color: #888888;
+    font-size: 9pt;
+    padding-bottom: 4px;
+}
+QTextEdit#statusBox {
+    font-family: Consolas, monospace;
+    font-size: 9pt;
+}

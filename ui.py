@@ -1,8 +1,8 @@
 import sys
 import os
-from PySide6.QtWidgets import QWidget, QFileDialog, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit, QListWidget, QComboBox
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QMovie
+from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLineEdit, QListWidget, QComboBox
+from PySide6.QtGui import QMovie, QIcon
+from PySide6.QtCore import Qt,  QSize
 from git_ops import GitOpsMixin
 
 
@@ -26,28 +26,33 @@ class MainWindow(QWidget, GitOpsMixin):
             self.setStyleSheet(f.read())
 
     def _init_widgets(self):
-        self.folder_button = QPushButton("select folder")
+        self.folder_button = QPushButton("  select folder")
         self.folder_label = QLabel("no folder selected")
         self.status_box = QTextEdit()
-        self.stage_button = QPushButton("stage all")
+        self.stage_button = QPushButton("  stage all")
         self.commit_input = QLineEdit()
-        self.commit_button = QPushButton("commit")
-        self.push_button = QPushButton("push")
-        self.log_button = QPushButton("view commit log")
+        self.commit_button = QPushButton("  commit")
+        self.push_button = QPushButton("  push")
+        self.log_button = QPushButton("  view commit log")
         self.commit_log = QListWidget()
-        self.unstage_button = QPushButton("unstage")
+        self.unstage_button = QPushButton("  unstage")
         self.status_label = QLabel("-")
         self.branch_dropdown = QComboBox()
-        self.pull_button = QPushButton("pull")
-        self.fetch_all_button = QPushButton("fetch all")
+        self.pull_button = QPushButton("  pull")
+        self.fetch_all_button = QPushButton("  fetch all")
         self.spinner = QLabel()
         self.spinner_movie = QMovie(resource_path("loading_ring.gif"))
+
+        self.status_section_label = QLabel("repository status")
+        self.commit_section_label = QLabel("commit")
+        self.log_section_label = QLabel("logs / output")
 
         self.status_label.setObjectName("statusLabel")
 
         self.folder_button.setFixedWidth(180)
         self.stage_button.setFixedWidth(180)
         self.unstage_button.setFixedWidth(180)
+        self.branch_dropdown.setFixedWidth(180)
 
         self.status_box.setReadOnly(True)
 
@@ -67,13 +72,32 @@ class MainWindow(QWidget, GitOpsMixin):
         self.spinner_movie.setScaledSize(self.spinner.size())
         self.spinner.hide()
 
-        self.stage_button.setEnabled(False)
-        self.commit_button.setEnabled(False)
-        self.push_button.setEnabled(False)
-        self.log_button.setEnabled(False)
-        self.unstage_button.setEnabled(False)
-        self.pull_button.setEnabled(False)
-        self.fetch_all_button.setEnabled(False)
+        self.status_box.setObjectName("statusBox")
+        self.status_section_label.setObjectName("sectionLabel")
+        self.commit_section_label.setObjectName("sectionLabel")
+        self.log_section_label.setObjectName("sectionLabel")
+
+        self.folder_button.setIcon(QIcon(resource_path("icons/folder.svg")))
+        self.folder_button.setIconSize(QSize(16, 16))
+        self.stage_button.setIcon(QIcon(resource_path("icons/upload.svg")))
+        self.stage_button.setIconSize(QSize(16, 16))
+        self.unstage_button.setIcon(QIcon(resource_path("icons/download.svg")))
+        self.unstage_button.setIconSize(QSize(16, 16))
+        self.commit_button.setIcon(QIcon(resource_path("icons/check.svg")))
+        self.commit_button.setIconSize(QSize(16, 16))
+        self.push_button.setIcon(
+            QIcon(resource_path("icons/arrow-up-circle.svg")))
+        self.push_button.setIconSize(QSize(16, 16))
+        self.pull_button.setIcon(
+            QIcon(resource_path("icons/arrow-down-circle.svg")))
+        self.pull_button.setIconSize(QSize(16, 16))
+        self.fetch_all_button.setIcon(
+            QIcon(resource_path("icons/refresh-cw.svg")))
+        self.fetch_all_button.setIconSize(QSize(16, 16))
+        self.log_button.setIcon(QIcon(resource_path("icons/list.svg")))
+        self.log_button.setIconSize(QSize(16, 16))
+
+        self.disable_UI()
 
     def _init_connections(self):
         self.stage_button.clicked.connect(self.run_git_add)
@@ -124,10 +148,13 @@ class MainWindow(QWidget, GitOpsMixin):
         main_layout = QVBoxLayout()
         row1.setAlignment(Qt.AlignCenter)
         main_layout.addLayout(row1)
+        main_layout.addWidget(self.status_section_label)
         main_layout.addWidget(self.status_box)
         main_layout.addLayout(row2)
+        main_layout.addWidget(self.commit_section_label)
         main_layout.addWidget(self.commit_input)
         main_layout.addLayout(row3)
+        main_layout.addWidget(self.log_section_label)
         main_layout.addLayout(row4)
         main_layout.addLayout(row5)
 
