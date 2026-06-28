@@ -98,12 +98,13 @@ class MainWindow(QWidget, GitOpsMixin):
         self.log_button.setIconSize(QSize(16, 16))
 
         self.disable_UI()
+        self.log_visible = False
 
     def _init_connections(self):
         self.stage_button.clicked.connect(self.run_git_add)
         self.commit_button.clicked.connect(self.run_git_commit)
         self.push_button.clicked.connect(self.run_git_push)
-        self.log_button.clicked.connect(self.run_git_log)
+        self.log_button.clicked.connect(self.toggle_commit_log)
         self.unstage_button.clicked.connect(self.run_git_unstage)
         self.branch_dropdown.currentTextChanged.connect(self.switch_branch)
         self.pull_button.clicked.connect(self.run_git_pull)

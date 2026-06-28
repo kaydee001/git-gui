@@ -71,13 +71,28 @@ class GitOpsMixin():
         self.worker.finished.connect(self.on_git_done)
         self.worker.start()
 
-    def run_git_log(self):
-        result = subprocess.run(
-            ["git", "log", "--oneline", "-5"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
-        self.commit_log.clear()
-        lines = result.stdout.splitlines()
-        for line in lines:
-            self.commit_log.addItem(line)
+    def toggle_commit_log(self):
+        if not self.log_visible:
+            result = subprocess.run(
+                ["git", "log", "--oneline", "-5"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
+            self.commit_log.clear()
+            self.log_visible = True
+            lines = result.stdout.splitlines()
+            for line in lines:
+                self.commit_log.addItem(line)
+            self.log_button.setText("  hide commit log")
+        else:
+            self.commit_log.clear()
+            self.log_visible = False
+            self.log_button.setText("  view commit log")
+
+    # def run_git_log(self):
+    #     result = subprocess.run(
+    #         ["git", "log", "--oneline", "-5"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
+    #     self.commit_log.clear()
+    #     lines = result.stdout.splitlines()
+    #     for line in lines:
+    #         self.commit_log.addItem(line)
 
     def run_git_unstage(self):
         result = subprocess.run(
