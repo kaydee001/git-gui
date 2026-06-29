@@ -26,7 +26,6 @@ class GitOpsMixin():
 
         result = subprocess.run(
             ["git", "status"], cwd=self.selected_path, capture_output=True, text=True, creationflags=NO_WINDOW)
-        self.status_label.setText(result.stdout)
 
         if "nothing to commit, working tree clean" in result.stdout:
             self.status_label.setText("clean")
@@ -36,6 +35,9 @@ class GitOpsMixin():
             self.status_label.setStyleSheet("color: #efef3c;")
         elif "Changes not staged" in result.stdout:
             self.status_label.setText("unstaged")
+            self.status_label.setStyleSheet("color: #ef4624;")
+        else:
+            self.status_label.setText("!")
             self.status_label.setStyleSheet("color: #ef4624;")
 
         self.branch_dropdown.currentTextChanged.disconnect(self.switch_branch)
