@@ -6,7 +6,9 @@ here's the updated README:
 
 A lightweight desktop Git client built with Python and PySide6.
 
-![screenshot](screenshot.png)
+![screenshot1](screenshot1.png)
+![screenshot2](screenshot2.png)
+![screenshot3](screenshot3.png)
 
 ## Why
 
